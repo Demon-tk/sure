@@ -71,6 +71,34 @@ class DebtPayoffPlan::SimulatorTest < ActiveSupport::TestCase
     assert_equal 1, result.months_to_payoff
   end
 
+  test "a promo rate accrues nothing until it expires, then the future rate kicks in" do
+    # 1200 at 0% for 6 months then 12% APR, 100 minimum. Months 1-6 are
+    # interest-free (balance 600 after month 6); the remaining balance
+    # amortizes at 1%/mo — hand-computed: paid off in month 13, 21.93 interest.
+    result = simulate(
+      [ debt(id: "promo", balance: 1200, rate: 0, minimum: 100, future_rate: 12, rate_change_month: 6) ]
+    )
+
+    assert_equal 13, result.months_to_payoff
+    assert_equal BigDecimal("21.93"), result.total_interest
+  end
+
+  test "avalanche deprioritizes a promo card until its rate jumps" do
+    # Promo card at 0% (jumping to 30% after month 12) vs a 10% loan. While
+    # the promo runs, the extra payment goes to the loan.
+    result = simulate(
+      [
+        debt(id: "promo", balance: 5000, rate: 0, minimum: 50, future_rate: 30, rate_change_month: 12),
+        debt(id: "loan", balance: 5000, rate: 10, minimum: 50)
+      ],
+      extra_payment: 400
+    )
+
+    loan = result.debt_results.find { |dr| dr.account_id == "loan" }
+    promo = result.debt_results.find { |dr| dr.account_id == "promo" }
+    assert loan.payoff_month < promo.payoff_month
+  end
+
   test "balance history starts at the opening balance and ends at zero" do
     result = simulate([ debt(id: "a", balance: 1000, rate: 12, minimum: 100) ])
     balances = result.debt_results.first.balances
@@ -85,7 +113,7 @@ class DebtPayoffPlan::SimulatorTest < ActiveSupport::TestCase
       DebtPayoffPlan::Simulator.new(debts, strategy: strategy, extra_payment: extra_payment).call
     end
 
-    def debt(id:, balance:, rate:, minimum:)
+    def debt(id:, balance:, rate:, minimum:, future_rate: nil, rate_change_month: nil)
       DebtPayoffPlan::DebtInput.new(
         account_id: id,
         name: id,
@@ -93,6 +121,8 @@ class DebtPayoffPlan::SimulatorTest < ActiveSupport::TestCase
         balance: BigDecimal(balance.to_s),
         annual_rate_percent: BigDecimal(rate.to_s),
         minimum_payment: BigDecimal(minimum.to_s),
+        future_rate: future_rate && BigDecimal(future_rate.to_s),
+        rate_change_month: rate_change_month,
         needs_info: false
       )
     end

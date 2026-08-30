@@ -9,6 +9,9 @@ en:
         avalanche: Avalanche (highest rate first)
         snowball: Snowball (smallest balance first)
       extra_payment_label: Extra monthly payment
+      comparison:
+        identical: Both strategies give the same result with these debts — an extra payment (and three or more debts) is where they diverge.
+        summary: "Avalanche: %{avalanche_interest} interest, %{avalanche_months} mo · Snowball: %{snowball_interest} interest, %{snowball_months} mo"
       stats:
         total_debt: Total debt
         payoff_date: Debt-free by
@@ -23,8 +26,12 @@ en:
         minimum: Minimum
         payoff_date: Payoff date
         needs_info: Needs info
+        rate_change: Rate change
+        after_month: after mo.
         override_rate_label: Rate %
         override_minimum_label: Min. payment
+        future_rate_label: New rate %
+        rate_change_month_label: Month
       chart:
         aria_label: Projected balance of each debt by month until payoff
       empty_state:

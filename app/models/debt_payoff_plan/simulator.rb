@@ -41,7 +41,7 @@ class DebtPayoffPlan::Simulator
       months_elapsed = month
 
       unpaid.each do |d|
-        interest = (balances[d.account_id] * monthly_rate(d)).round(2, half: :up)
+        interest = (balances[d.account_id] * monthly_rate(d, month)).round(2, half: :up)
         balances[d.account_id] += interest
         interest_paid[d.account_id] += interest
       end
@@ -51,7 +51,7 @@ class DebtPayoffPlan::Simulator
       end
 
       pool = extra_payment + freed_minimums
-      ordered(unpaid, balances).each do |d|
+      ordered(unpaid, balances, month).each do |d|
         break if pool <= PENNY
         next if balances[d.account_id] <= PENNY
 
@@ -89,20 +89,29 @@ class DebtPayoffPlan::Simulator
   private
     attr_reader :debts, :strategy, :extra_payment
 
-    def monthly_rate(debt)
-      BigDecimal(debt.annual_rate_percent.to_s) / 1200
+    # A promo APR runs for rate_change_month months, then future_rate takes
+    # over (0% intro card jumping to its standard rate).
+    def monthly_rate(debt, month)
+      rate = if debt.future_rate && debt.rate_change_month && month > debt.rate_change_month
+        debt.future_rate
+      else
+        debt.annual_rate_percent
+      end
+
+      BigDecimal(rate.to_s) / 1200
     end
 
     def minimum_for(debt)
       BigDecimal(debt.minimum_payment.to_s)
     end
 
-    def ordered(unpaid, balances)
+    def ordered(unpaid, balances, month)
       case strategy
       when "snowball"
         unpaid.sort_by { |d| balances[d.account_id] }
-      else # avalanche
-        unpaid.sort_by { |d| -d.annual_rate_percent }
+      else # avalanche — by the rate the debt charges *this* month, so a 0%
+        # promo card stays last until its rate jumps
+        unpaid.sort_by { |d| -monthly_rate(d, month) }
       end
     end
 end
