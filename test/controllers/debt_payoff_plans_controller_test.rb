@@ -43,6 +43,15 @@ class DebtPayoffPlansControllerTest < ActionDispatch::IntegrationTest
     assert_no_match I18n.t("debt_payoff_plans.show.debt_list.needs_info"), response.body
   end
 
+  test "honors the expected_return param and renders the invest-vs-payoff verdict" do
+    enable_preview_features
+
+    get debt_payoff_plan_url(expected_return: 3)
+
+    assert_response :success
+    assert_match I18n.t("debt_payoff_plans.show.verdict.tossup"), response.body
+  end
+
   private
     def enable_preview_features
       @user.update!(preferences: (@user.preferences || {}).merge("preview_features_enabled" => true))

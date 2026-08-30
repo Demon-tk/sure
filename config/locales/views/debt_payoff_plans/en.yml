@@ -9,6 +9,7 @@ en:
         avalanche: Avalanche (highest rate first)
         snowball: Snowball (smallest balance first)
       extra_payment_label: Extra monthly payment
+      expected_return_label: Expected return %
       comparison:
         identical: Both strategies give the same result with these debts — an extra payment (and three or more debts) is where they diverge.
         summary: "Avalanche: %{avalanche_interest} interest, %{avalanche_months} mo · Snowball: %{snowball_interest} interest, %{snowball_months} mo"
@@ -31,6 +32,14 @@ en:
           other: "%{count} scheduled rate changes"
         override_rate_label: Rate %
         override_minimum_label: Min. payment
+        verdict: Vs. investing
+      verdict:
+        payoff: Pay off
+        invest: Invest instead
+        tossup: Toss-up
+        payoff_note: "costs ~%{amount}/yr vs investing"
+        invest_note: "investing likely wins by ~%{amount}/yr"
+        judged_at: "judged at %{rate} (rate change ahead)"
       chart:
         aria_label: Projected balance of each debt by month until payoff
       empty_state:

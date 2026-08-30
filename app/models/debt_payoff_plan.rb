@@ -16,14 +16,22 @@ class DebtPayoffPlan
     def needs_info? = needs_info
   end
 
-  attr_reader :family, :strategy, :extra_payment, :overrides
+  # comparison_rate is the APR the debt is judged against (see #advice_for);
+  # annual_delta is positive when paying the debt off beats investing.
+  Advice = Data.define(:verdict, :comparison_rate, :annual_delta)
 
-  def initialize(family:, user: nil, strategy: nil, extra_payment: nil, overrides: {})
+  # Matches FirePlan's default expected_return assumption.
+  DEFAULT_EXPECTED_RETURN = BigDecimal("7.0")
+
+  attr_reader :family, :strategy, :extra_payment, :overrides, :expected_return
+
+  def initialize(family:, user: nil, strategy: nil, extra_payment: nil, overrides: {}, expected_return: nil)
     @family = family
     @user = user
     @strategy = STRATEGIES.include?(strategy) ? strategy : "avalanche"
     @extra_payment = [ BigDecimal(extra_payment.presence || 0, 12), BigDecimal(0) ].max
     @overrides = overrides || {}
+    @expected_return = BigDecimal(expected_return.presence || DEFAULT_EXPECTED_RETURN, 12).clamp(BigDecimal(0), BigDecimal(20))
   end
 
   def debts
@@ -69,6 +77,36 @@ class DebtPayoffPlan
 
   def debt_result_for(debt)
     result.debt_results.find { |dr| dr.account_id == debt.account_id }
+  end
+
+  # Invest-vs-payoff verdict for one debt: is expected_return likely to beat
+  # what this debt costs, or vice versa?
+  def advice_for(debt)
+    return nil if debt.needs_info?
+
+    # Judge the debt by the highest APR it will charge within the next 12
+    # months, not today's rate — a 0% promo card that jumps to 24% in month
+    # 3 must be judged by the 24%, not the teaser.
+    near_term_rates = debt.rate_schedule.select { |month_offset, _rate| month_offset <= 12 }.map(&:last)
+    comparison_rate = [ debt.annual_rate_percent, *near_term_rates ].max
+    spread = comparison_rate - expected_return
+
+    # +/-1% band: both comparison_rate and expected_return are estimates, so
+    # a wafer-thin edge isn't worth a confident verdict either way.
+    verdict =
+      if spread > 1
+        :payoff
+      elsif spread < -1
+        :invest
+      else
+        :tossup
+      end
+
+    Advice.new(
+      verdict: verdict,
+      comparison_rate: comparison_rate,
+      annual_delta: (debt.balance * spread / 100).round(2)
+    )
   end
 
   # Both strategies' outcomes side by side. With no extra payment or fewer

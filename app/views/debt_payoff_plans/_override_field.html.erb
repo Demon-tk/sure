@@ -7,6 +7,7 @@
               data: { controller: "auto-submit-form", auto_submit_form_trigger_event_value: "blur" } do %>
   <%= hidden_field_tag :strategy, plan.strategy %>
   <%= hidden_field_tag :extra_payment, (plan.extra_payment.positive? ? plan.extra_payment.to_i : nil) %>
+  <%= hidden_field_tag :expected_return, sprintf("%g", plan.expected_return.to_f) %>
   <% plan.overrides.each do |account_id, values| %>
     <% values.each do |other_field, other_value| %>
       <% next if account_id == debt.account_id && other_field.to_s == field.to_s %>

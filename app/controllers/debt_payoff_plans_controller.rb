@@ -7,6 +7,7 @@ class DebtPayoffPlansController < ApplicationController
       user: Current.user,
       strategy: params[:strategy],
       extra_payment: params[:extra_payment],
+      expected_return: params[:expected_return],
       overrides: parsed_overrides
     )
 
