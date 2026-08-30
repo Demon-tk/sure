@@ -1,0 +1,45 @@
+---
+en:
+  fire_plans:
+    show:
+      title: FIRE Planner
+      subtitle: Project when your portfolio could cover your spending, and stress-test the path there.
+      assumptions:
+        gross_income: Gross income
+        annual_expenses: Annual expenses
+        portfolio: Portfolio
+        current_age: Current age
+        swr: Safe withdrawal rate %
+        expected_return: Expected return %
+        inflation: Inflation %
+        income_growth: Income growth %
+        volatility: Volatility %
+        state_rate: State tax rate %
+        retirement_tax_rate: Retirement tax rate %
+        filing_status: Filing status
+        filing_statuses:
+          single: Single
+          married_filing_jointly: Married filing jointly
+      stats:
+        fire_number: FIRE number
+        fire_age: FIRE age
+        years_to_fire: Years to FIRE
+        success_rate: Monte Carlo success rate
+        not_within_horizon: Not by 90
+      chart:
+        aria_label: Projected portfolio value by year against the FIRE number, with a Monte Carlo range
+      table:
+        year: Year
+        age: Age
+        income: Income
+        taxes: Taxes
+        expenses: Expenses
+        savings: Savings
+        portfolio: Portfolio
+        fire_badge: FIRE
+        truncated:
+          one: 1 more year not shown
+          other: "%{count} more years not shown"
+      empty_state:
+        body: Add an income source or an investment account to project your path to financial independence.
+        add_account: Add account

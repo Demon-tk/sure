@@ -411,6 +411,8 @@ Rails.application.routes.draw do
 
   resource :debt_payoff_plan, only: :show
 
+  resource :fire_plan, only: :show
+
   resources :budgets, only: %i[index show edit update], param: :month_year do
     post :copy_previous, on: :member
     get :picker, on: :collection

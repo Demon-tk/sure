@@ -46,3 +46,10 @@ en:
       view_plan: View payoff plan
       empty_body: Add a loan or credit card account to plan your payoff and see how much interest an extra payment saves.
       add_account: Add account
+    fire_card:
+      title: FIRE
+      fire_age: financially independent at %{age}
+      not_within_horizon: not reached by 90
+      view_plan: View FIRE plan
+      empty_body: Add an income source or an investment account to project your path to financial independence.
+      add_account: Add account

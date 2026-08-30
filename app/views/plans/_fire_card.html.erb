@@ -1,0 +1,44 @@
+<%# locals: (plan:) %>
+
+<%= render DS::Card.new do %>
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <span class="w-7 h-7 rounded-lg bg-surface-inset text-secondary flex items-center justify-center shrink-0">
+      <%= icon("flame", size: "sm") %>
+    </span>
+    <h2 class="text-sm font-medium text-primary shrink-0"><%= t(".title") %></h2>
+  </div>
+
+  <% if plan.plannable? %>
+    <div class="flex items-baseline gap-2">
+      <span class="text-3xl font-medium text-primary tabular-nums privacy-sensitive">
+        <%= format_money(plan.fire_number_money) %>
+      </span>
+      <span class="text-sm text-subdued">
+        <%= plan.fired_within_horizon? ? t(".fire_age", age: plan.fire_age) : t(".not_within_horizon") %>
+      </span>
+    </div>
+
+    <%= render DS::Link.new(
+      text: t(".view_plan"),
+      variant: "secondary",
+      href: fire_plan_path,
+      icon: "chevron-right",
+      icon_position: :right,
+      full_width: true,
+      class: "mt-5"
+    ) %>
+  <% else %>
+    <div class="flex-1 flex flex-col items-center justify-center text-center gap-3 py-10">
+      <span class="w-12 h-12 rounded-full bg-surface-inset text-secondary flex items-center justify-center">
+        <%= icon("flame", size: "md") %>
+      </span>
+      <p class="text-sm text-secondary max-w-xs"><%= t(".empty_body") %></p>
+      <%= render DS::Link.new(
+        text: t(".add_account"),
+        variant: "primary",
+        href: new_account_path(return_to: plan_path),
+        icon: "plus"
+      ) %>
+    </div>
+  <% end %>
+<% end %>

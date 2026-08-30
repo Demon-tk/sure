@@ -1,0 +1,11 @@
+<%# locals: (name:, value:, label:, step:) %>
+<%# One labelled number input in the assumptions grid. It carries no form of
+    its own — every field lives inside the single GET form on the show page,
+    so each edit re-submits the whole assumption set. %>
+<div>
+  <%= label_tag name, label, class: "block text-xs text-secondary mb-1" %>
+  <%= number_field_tag name, value,
+        step: step, autocomplete: "off",
+        class: "form-field__input w-full text-sm tabular-nums",
+        data: { auto_submit_form_target: "auto" } %>
+</div>

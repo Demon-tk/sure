@@ -101,6 +101,14 @@ class PlansControllerTest < ActionDispatch::IntegrationTest
     assert_match I18n.t("plans.debt_payoff_card.title"), response.body
     assert_select "a[href=?]", debt_payoff_plan_path
   end
+
+  test "renders the FIRE card linking to the planner" do
+    get plan_url
+
+    assert_response :success
+    assert_match I18n.t("plans.fire_card.title"), response.body
+    assert_select "a[href=?]", fire_plan_path
+  end
 end
 
 class PlansControllerHouseholdSwitchingTest < ActionDispatch::IntegrationTest

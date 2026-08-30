@@ -1,0 +1,145 @@
+<% projection = @plan.plannable? ? @plan.projection : nil %>
+<% rows = projection&.rows || [] %>
+<% visible_rows = rows.first(40) %>
+
+<div class="@container space-y-6 pb-6 lg:pb-12">
+  <header>
+    <div class="flex items-center gap-2">
+      <h1 class="text-2xl font-semibold text-primary"><%= t(".title") %></h1>
+      <%= render DS::Pill.new(label: t("shared.preview"), size: :md) %>
+    </div>
+    <p class="text-sm text-secondary mt-1"><%= t(".subtitle") %></p>
+  </header>
+
+  <% if @plan.plannable? %>
+    <%# One GET form holds every assumption, so each edit re-submits the whole
+        set and no hidden fields are needed to preserve the others. %>
+    <%= form_with url: fire_plan_path, method: :get,
+                  class: "bg-container rounded-xl border border-primary p-4 space-y-4",
+                  data: { controller: "auto-submit-form", auto_submit_form_trigger_event_value: "blur" } do %>
+      <div class="grid grid-cols-1 @xl:grid-cols-3 gap-4">
+        <%= render "fire_plans/assumption_field", name: :gross_income,
+                   value: @plan.gross_income.to_i, label: t(".assumptions.gross_income"), step: 1 %>
+        <%= render "fire_plans/assumption_field", name: :annual_expenses,
+                   value: @plan.annual_expenses.to_i, label: t(".assumptions.annual_expenses"), step: 1 %>
+        <%= render "fire_plans/assumption_field", name: :portfolio,
+                   value: @plan.portfolio.to_i, label: t(".assumptions.portfolio"), step: 1 %>
+      </div>
+
+      <div class="grid grid-cols-2 @xl:grid-cols-4 gap-4">
+        <% [
+             [ :current_age, 1 ],
+             [ :swr, 0.1 ],
+             [ :expected_return, 0.1 ],
+             [ :inflation, 0.1 ],
+             [ :income_growth, 0.1 ],
+             [ :volatility, 0.5 ],
+             [ :state_rate, 0.1 ],
+             [ :retirement_tax_rate, 0.5 ]
+           ].each do |name, step| %>
+          <%= render "fire_plans/assumption_field", name: name,
+                     value: format("%g", @plan.assumption(name).to_f),
+                     label: t(".assumptions.#{name}"), step: step %>
+        <% end %>
+
+        <div>
+          <%= label_tag :filing_status, t(".assumptions.filing_status"), class: "block text-xs text-secondary mb-1" %>
+          <%= select_tag :filing_status,
+                options_for_select(
+                  FirePlan::FILING_STATUSES.map { |status| [ t(".assumptions.filing_statuses.#{status}"), status ] },
+                  @plan.filing_status
+                ),
+                class: "form-field__input w-full text-sm",
+                autocomplete: "off",
+                data: { auto_submit_form_target: "auto", autosubmit_trigger_event: "change" } %>
+        </div>
+      </div>
+    <% end %>
+
+    <div class="grid grid-cols-2 @3xl:grid-cols-4 gap-4">
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.fire_number") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums privacy-sensitive"><%= format_money(@plan.fire_number_money) %></p>
+      </div>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.fire_age") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums">
+          <%= @plan.fired_within_horizon? ? @plan.fire_age : t(".stats.not_within_horizon") %>
+        </p>
+      </div>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.years_to_fire") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums">
+          <%= @plan.fired_within_horizon? ? @plan.years_to_fire : t(".stats.not_within_horizon") %>
+        </p>
+      </div>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.success_rate") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums"><%= "#{@plan.monte_carlo.success_rate}%" %></p>
+      </div>
+    </div>
+
+    <div class="bg-container rounded-xl border border-primary p-4">
+      <div class="h-[300px] privacy-sensitive"
+           data-controller="fire-plan-chart"
+           data-fire-plan-chart-data-value="<%= @plan.chart_payload.to_json %>"
+           data-fire-plan-chart-aria-label-value="<%= t(".chart.aria_label") %>"></div>
+    </div>
+
+    <div class="bg-container rounded-xl border border-primary overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-secondary border-b border-divider">
+              <th class="px-4 py-3 font-medium"><%= t(".table.year") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".table.age") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".table.income") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".table.taxes") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".table.expenses") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".table.savings") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".table.portfolio") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% visible_rows.each do |row| %>
+              <tr class="border-b border-divider last:border-0">
+                <td class="px-4 py-3 text-primary font-medium">
+                  <span class="inline-flex items-center gap-2">
+                    <%= row.year %>
+                    <% if row.year == projection.fire_year %>
+                      <%= render DS::Pill.new(label: t(".table.fire_badge"), size: :sm, tone: :success, marker: false) %>
+                    <% end %>
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary"><%= row.age %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(row.gross_income, @plan.currency)) %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(row.taxes, @plan.currency)) %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(row.expenses, @plan.currency)) %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(row.savings, @plan.currency)) %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(row.portfolio, @plan.currency)) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+      <% if rows.size > visible_rows.size %>
+        <p class="px-4 py-3 text-xs text-subdued border-t border-divider">
+          <%= t(".table.truncated", count: rows.size - visible_rows.size) %>
+        </p>
+      <% end %>
+    </div>
+  <% else %>
+    <div class="flex flex-col items-center justify-center text-center gap-3 py-16">
+      <span class="w-12 h-12 rounded-full bg-surface-inset text-secondary flex items-center justify-center">
+        <%= icon("flame", size: "md") %>
+      </span>
+      <p class="text-sm text-secondary max-w-xs"><%= t(".empty_state.body") %></p>
+      <%= render DS::Link.new(
+        text: t(".empty_state.add_account"),
+        variant: "primary",
+        href: new_account_path(return_to: fire_plan_path),
+        icon: "plus"
+      ) %>
+    </div>
+  <% end %>
+</div>

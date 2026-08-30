@@ -25,6 +25,7 @@ class PlansController < ApplicationController
                                      .count
 
     @debt_payoff_plan = DebtPayoffPlan.new(family: Current.family, user: Current.user)
+    @fire_plan = FirePlan.new(family: Current.family)
 
     @breadcrumbs = [ [ t("breadcrumbs.home"), root_path ], [ t("breadcrumbs.plan"), nil ] ]
   end
