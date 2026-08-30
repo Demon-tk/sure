@@ -1,0 +1,15 @@
+<%# locals: (path:) %>
+<%# Inline "save this scenario" form, rendered in the toolbar area of each
+    planner page. Kept light on purpose: one text field + compact submit in
+    a plain inline row (no card), matching the small forms elsewhere. %>
+<%= form_with model: PlanScenario.new, url: plan_scenarios_path,
+              class: "flex flex-wrap items-center gap-2" do |form| %>
+  <%= form.text_field :name,
+                      placeholder: t(".name_placeholder"),
+                      aria_label: t(".name_label"),
+                      autocomplete: "off",
+                      class: "form-field__input w-44 text-sm" %>
+  <%= form.hidden_field :path, value: path %>
+  <%= form.submit t(".submit"),
+                  class: "rounded-lg border border-primary bg-container px-3 py-2 text-sm font-medium text-primary hover:bg-surface-inset" %>
+<% end %>

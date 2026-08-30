@@ -11,6 +11,8 @@
     <p class="text-sm text-secondary mt-1"><%= t(".subtitle") %></p>
   </header>
 
+  <%= render "plan_scenarios/save_form", path: request.fullpath %>
+
   <% if @plan.plannable? %>
     <%# One GET form holds every assumption, so each edit re-submits the whole
         set and no hidden fields are needed to preserve the others. %>

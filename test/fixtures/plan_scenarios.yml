@@ -1,0 +1,4 @@
+retire_early:
+  family: dylan_family
+  name: Early Retirement
+  path: /fire_plan?retire_age=55

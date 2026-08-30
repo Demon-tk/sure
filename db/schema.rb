@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -1632,6 +1632,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_170000) do
     t.index ["plaid_id"], name: "index_plaid_items_on_plaid_id", unique: true
   end
 
+  create_table "plan_scenarios", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.uuid "family_id", null: false
+    t.string "name", null: false
+    t.string "path", null: false
+    t.datetime "updated_at", null: false
+    t.index ["family_id"], name: "index_plan_scenarios_on_family_id"
+  end
+
   create_table "properties", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
     t.string "area_unit"
     t.integer "area_value"
@@ -2540,6 +2549,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_170000) do
   add_foreign_key "onchain_wallet_items", "families"
   add_foreign_key "plaid_accounts", "plaid_items"
   add_foreign_key "plaid_items", "families"
+  add_foreign_key "plan_scenarios", "families"
   add_foreign_key "push_subscriptions", "users"
   add_foreign_key "questrade_accounts", "questrade_items"
   add_foreign_key "questrade_items", "families"

@@ -7,6 +7,8 @@
     <p class="text-sm text-secondary mt-1"><%= t(".subtitle") %></p>
   </header>
 
+  <%= render "plan_scenarios/save_form", path: request.fullpath %>
+
   <% if @plan.any_debts? %>
     <div class="flex flex-wrap items-center gap-4">
       <%= render DS::SegmentedControl.new(aria_label: t(".strategy_label")) do |control| %>

@@ -415,6 +415,8 @@ Rails.application.routes.draw do
 
   resources :fire_milestones, only: [ :create, :destroy ]
 
+  resources :plan_scenarios, only: [ :create, :destroy ]
+
   resources :budgets, only: %i[index show edit update], param: :month_year do
     post :copy_previous, on: :member
     get :picker, on: :collection

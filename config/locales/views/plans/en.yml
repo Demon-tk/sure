@@ -4,6 +4,15 @@ en:
     show:
       title: Plan
       subtitle: Decide where your money goes — what you spend, and what you save.
+      saved_scenarios:
+        title: Saved scenarios
+        subtitle: Jump straight back to a planner state you bookmarked.
+        planner:
+          fire: FIRE
+          debt: Debt
+        destroy: Delete
+        destroy_confirm: Delete this scenario?
+        empty: No saved scenarios yet — save one from the FIRE or debt payoff planner.
     budget_card:
       title: This month
       edit_budget: Edit budget

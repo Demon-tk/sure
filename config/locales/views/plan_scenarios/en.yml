@@ -1,0 +1,7 @@
+---
+en:
+  plan_scenarios:
+    save_form:
+      name_label: Scenario name
+      name_placeholder: Scenario name
+      submit: Save

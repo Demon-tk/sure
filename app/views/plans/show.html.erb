@@ -18,4 +18,31 @@
       <%= render "plans/debt_payoff_card", plan: @debt_payoff_plan %>
     </div>
   </div>
+
+  <% scenarios = Current.family.plan_scenarios.order(:name) %>
+  <section class="bg-container rounded-xl border border-primary p-4 space-y-4">
+    <div>
+      <h2 class="text-base font-semibold text-primary"><%= t(".saved_scenarios.title") %></h2>
+      <p class="text-xs text-secondary mt-1"><%= t(".saved_scenarios.subtitle") %></p>
+    </div>
+
+    <% if scenarios.any? %>
+      <ul class="divide-y divide-divider">
+        <% scenarios.each do |scenario| %>
+          <% planner_label = scenario.path.start_with?("/fire_plan") ? t(".saved_scenarios.planner.fire") : t(".saved_scenarios.planner.debt") %>
+          <li class="flex items-center justify-between gap-4 py-3 first:pt-0">
+            <div class="flex items-center gap-2 min-w-0">
+              <%= link_to scenario.name, scenario.path, class: "text-sm font-medium text-link hover:underline truncate" %>
+              <%= render DS::Pill.new(label: planner_label, size: :sm) %>
+            </div>
+            <%= button_to t(".saved_scenarios.destroy"), plan_scenario_path(scenario), method: :delete,
+                          class: "shrink-0 text-xs font-medium text-secondary hover:text-primary",
+                          data: { turbo_confirm: t(".saved_scenarios.destroy_confirm") } %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="text-sm text-secondary"><%= t(".saved_scenarios.empty") %></p>
+    <% end %>
+  </section>
 </div>
