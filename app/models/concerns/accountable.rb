@@ -132,4 +132,15 @@ module Accountable
   def classification
     self.class.classification
   end
+
+  # Annual interest rate (percent) and monthly minimum payment used by
+  # DebtPayoffPlan. Liability types that know these override them; nil means
+  # the user must supply the value before this debt can be simulated.
+  def payoff_rate
+    nil
+  end
+
+  def payoff_minimum_payment
+    nil
+  end
 end

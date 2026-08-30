@@ -23,4 +23,19 @@ class LoanTest < ActiveSupport::TestCase
 
     assert_equal 2245, loan_account.loan.monthly_payment.amount
   end
+
+  test "payoff rate and minimum come from the fixed rate and amortized payment" do
+    loan = accounts(:loan).loan
+
+    assert_equal loan.interest_rate, loan.payoff_rate
+    assert_equal loan.monthly_payment.amount, loan.payoff_minimum_payment
+  end
+
+  test "a variable rate loan reports no payoff rate" do
+    loan = accounts(:loan).loan
+    loan.update!(rate_type: "variable")
+
+    assert_nil loan.payoff_rate
+    assert_nil loan.payoff_minimum_payment
+  end
 end

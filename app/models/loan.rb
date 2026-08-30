@@ -33,6 +33,16 @@ class Loan < ApplicationRecord
     Money.new(account.first_valuation_amount, account.currency)
   end
 
+  # Variable-rate loans have no dependable rate or amortized payment, so they
+  # report nil and DebtPayoffPlan asks the user instead.
+  def payoff_rate
+    interest_rate if rate_type == "fixed"
+  end
+
+  def payoff_minimum_payment
+    monthly_payment&.amount
+  end
+
   class << self
     def color
       "#D444F1"

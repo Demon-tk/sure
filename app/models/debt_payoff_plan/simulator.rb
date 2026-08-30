@@ -1,0 +1,108 @@
+# Month-by-month payoff simulation over a fixed set of debts. Pure math —
+# no ActiveRecord, no currency conversion (inputs are already in one currency).
+#
+# Each month: interest accrues on every unpaid balance, minimums are paid,
+# then the extra pool (the user's extra payment plus the freed minimums of
+# already-paid-off debts) is applied in strategy order. The order is
+# recomputed every month because the snowball ranking shifts as balances
+# shrink.
+class DebtPayoffPlan::Simulator
+  # A debt that never amortizes (payment below accrued interest) would loop
+  # forever; 30 years is far beyond any plannable horizon.
+  MAX_MONTHS = 360
+
+  PENNY = BigDecimal("0.01")
+
+  Result = Data.define(:total_interest, :months_to_payoff, :payoff_date, :debt_results)
+
+  # balances holds the end-of-month balance per month, index 0 = starting
+  # balance, so the chart can draw the full trajectory. payoff_month is nil
+  # when the debt is still unpaid at MAX_MONTHS.
+  DebtResult = Data.define(:account_id, :payoff_month, :total_interest, :balances)
+
+  def initialize(debts, strategy:, extra_payment: 0)
+    @debts = debts
+    @strategy = strategy
+    @extra_payment = BigDecimal(extra_payment.to_s)
+  end
+
+  def call
+    balances = debts.to_h { |d| [ d.account_id, BigDecimal(d.balance.to_s) ] }
+    history = debts.to_h { |d| [ d.account_id, [ balances[d.account_id] ] ] }
+    interest_paid = Hash.new(BigDecimal(0))
+    payoff_months = {}
+    freed_minimums = BigDecimal(0)
+    months_elapsed = 0
+
+    (1..MAX_MONTHS).each do |month|
+      unpaid = debts.select { |d| balances[d.account_id] > PENNY }
+      break if unpaid.empty?
+
+      months_elapsed = month
+
+      unpaid.each do |d|
+        interest = (balances[d.account_id] * monthly_rate(d)).round(2, half: :up)
+        balances[d.account_id] += interest
+        interest_paid[d.account_id] += interest
+      end
+
+      unpaid.each do |d|
+        balances[d.account_id] -= [ minimum_for(d), balances[d.account_id] ].min
+      end
+
+      pool = extra_payment + freed_minimums
+      ordered(unpaid, balances).each do |d|
+        break if pool <= PENNY
+        next if balances[d.account_id] <= PENNY
+
+        applied = [ pool, balances[d.account_id] ].min
+        balances[d.account_id] -= applied
+        pool -= applied
+      end
+
+      unpaid.each do |d|
+        next unless balances[d.account_id] <= PENNY && !payoff_months.key?(d.account_id)
+
+        payoff_months[d.account_id] = month
+        freed_minimums += minimum_for(d)
+        balances[d.account_id] = BigDecimal(0)
+      end
+
+      debts.each { |d| history[d.account_id] << balances[d.account_id] }
+    end
+
+    Result.new(
+      total_interest: interest_paid.values.sum(BigDecimal(0)),
+      months_to_payoff: months_elapsed,
+      payoff_date: Date.current + months_elapsed.months,
+      debt_results: debts.map do |d|
+        DebtResult.new(
+          account_id: d.account_id,
+          payoff_month: payoff_months[d.account_id],
+          total_interest: interest_paid[d.account_id],
+          balances: history[d.account_id]
+        )
+      end
+    )
+  end
+
+  private
+    attr_reader :debts, :strategy, :extra_payment
+
+    def monthly_rate(debt)
+      BigDecimal(debt.annual_rate_percent.to_s) / 1200
+    end
+
+    def minimum_for(debt)
+      BigDecimal(debt.minimum_payment.to_s)
+    end
+
+    def ordered(unpaid, balances)
+      case strategy
+      when "snowball"
+        unpaid.sort_by { |d| balances[d.account_id] }
+      else # avalanche
+        unpaid.sort_by { |d| -d.annual_rate_percent }
+      end
+    end
+end

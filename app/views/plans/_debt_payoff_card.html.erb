@@ -1,0 +1,52 @@
+<%# locals: (plan:) %>
+
+<%= render DS::Card.new do %>
+  <div class="flex flex-wrap items-center gap-2 mb-4">
+    <span class="w-7 h-7 rounded-lg bg-surface-inset text-secondary flex items-center justify-center shrink-0">
+      <%= icon("trending-down", size: "sm") %>
+    </span>
+    <h2 class="text-sm font-medium text-primary shrink-0"><%= t(".title") %></h2>
+    <% if plan.any_debts? %>
+      <span class="text-xs text-subdued">· <%= t(".debt_count", count: plan.debts.size) %></span>
+    <% end %>
+  </div>
+
+  <% if plan.any_debts? %>
+    <div class="flex items-baseline gap-2">
+      <span class="text-3xl font-medium text-primary tabular-nums privacy-sensitive">
+        <%= format_money(plan.total_debt_money) %>
+      </span>
+      <% if plan.payable_debts.any? && !plan.capped? %>
+        <span class="text-sm text-subdued">
+          <%= t(".months_to_payoff", count: plan.months_to_payoff) %>
+        </span>
+      <% end %>
+    </div>
+    <% if plan.needs_info? %>
+      <p class="text-xs text-subdued mt-1"><%= t(".needs_info_note") %></p>
+    <% end %>
+
+    <%= render DS::Link.new(
+      text: t(".view_plan"),
+      variant: "secondary",
+      href: debt_payoff_plan_path,
+      icon: "chevron-right",
+      icon_position: :right,
+      full_width: true,
+      class: "mt-5"
+    ) %>
+  <% else %>
+    <div class="flex-1 flex flex-col items-center justify-center text-center gap-3 py-10">
+      <span class="w-12 h-12 rounded-full bg-surface-inset text-secondary flex items-center justify-center">
+        <%= icon("trending-down", size: "md") %>
+      </span>
+      <p class="text-sm text-secondary max-w-xs"><%= t(".empty_body") %></p>
+      <%= render DS::Link.new(
+        text: t(".add_account"),
+        variant: "primary",
+        href: new_account_path(return_to: plan_path),
+        icon: "plus"
+      ) %>
+    </div>
+  <% end %>
+<% end %>

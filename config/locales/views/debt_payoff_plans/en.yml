@@ -1,0 +1,32 @@
+---
+en:
+  debt_payoff_plans:
+    show:
+      title: Debt Payoff Planner
+      subtitle: Compare payoff strategies and see how much interest an extra monthly payment saves.
+      strategy_label: Payoff strategy
+      strategy:
+        avalanche: Avalanche (highest rate first)
+        snowball: Snowball (smallest balance first)
+      extra_payment_label: Extra monthly payment
+      stats:
+        total_debt: Total debt
+        payoff_date: Debt-free by
+        months_to_payoff: Months to debt-free
+        months_capped: "%{count}+"
+        beyond_horizon: Beyond 30 years
+        interest_saved: Interest saved vs. minimums
+      debt_list:
+        name: Debt
+        balance: Balance
+        rate: Rate
+        minimum: Minimum
+        payoff_date: Payoff date
+        needs_info: Needs info
+        override_rate_label: Rate %
+        override_minimum_label: Min. payment
+      chart:
+        aria_label: Projected balance of each debt by month until payoff
+      empty_state:
+        body: Add a loan or credit card account to plan your payoff.
+        add_account: Add account

@@ -34,3 +34,15 @@ en:
       pending_marker: pending
       runway: "%{months} mo runway · %{pace}/mo"
       all_goals: All goals
+    debt_payoff_card:
+      title: Debt payoff
+      debt_count:
+        one: 1 debt
+        other: "%{count} debts"
+      months_to_payoff:
+        one: debt-free in 1 month at minimums
+        other: debt-free in %{count} months at minimums
+      needs_info_note: Some debts are missing a rate or minimum payment
+      view_plan: View payoff plan
+      empty_body: Add a loan or credit card account to plan your payoff and see how much interest an extra payment saves.
+      add_account: Add account

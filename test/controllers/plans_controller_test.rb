@@ -93,6 +93,14 @@ class PlansControllerTest < ActionDispatch::IntegrationTest
     assert_match I18n.t("plans.budget_card.empty_body"), response.body
     assert_select "a[href=?]", edit_budget_path(Budget.date_to_param(Date.current))
   end
+
+  test "renders the debt payoff card linking to the planner" do
+    get plan_url
+
+    assert_response :success
+    assert_match I18n.t("plans.debt_payoff_card.title"), response.body
+    assert_select "a[href=?]", debt_payoff_plan_path
+  end
 end
 
 class PlansControllerHouseholdSwitchingTest < ActionDispatch::IntegrationTest

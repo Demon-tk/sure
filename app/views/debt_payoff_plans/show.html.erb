@@ -1,0 +1,139 @@
+<div class="@container space-y-6 pb-6 lg:pb-12">
+  <header>
+    <div class="flex items-center gap-2">
+      <h1 class="text-2xl font-semibold text-primary"><%= t(".title") %></h1>
+      <%= render DS::Pill.new(label: t("shared.preview"), size: :md) %>
+    </div>
+    <p class="text-sm text-secondary mt-1"><%= t(".subtitle") %></p>
+  </header>
+
+  <% if @plan.any_debts? %>
+    <div class="flex flex-wrap items-center gap-4">
+      <%= render DS::SegmentedControl.new(aria_label: t(".strategy_label")) do |control| %>
+        <% DebtPayoffPlan::STRATEGIES.each do |strategy| %>
+          <% control.with_segment(
+            t(".strategy.#{strategy}"),
+            active: @plan.strategy == strategy,
+            href: debt_payoff_plan_path(strategy: strategy, extra_payment: (@plan.extra_payment.positive? ? @plan.extra_payment.to_i : nil), overrides: @plan.overrides.presence)
+          ) %>
+        <% end %>
+      <% end %>
+
+      <%= form_with url: debt_payoff_plan_path, method: :get,
+                    class: "flex items-center gap-2",
+                    data: { controller: "auto-submit-form", auto_submit_form_trigger_event_value: "blur" } do |f| %>
+        <%= hidden_field_tag :strategy, @plan.strategy %>
+        <% @plan.overrides.each do |account_id, values| %>
+          <%= hidden_field_tag "overrides[#{account_id}][rate]", values[:rate] %>
+          <%= hidden_field_tag "overrides[#{account_id}][minimum_payment]", values[:minimum_payment] %>
+        <% end %>
+        <%= label_tag :extra_payment, t(".extra_payment_label"), class: "text-sm text-secondary" %>
+        <%= number_field_tag :extra_payment, (@plan.extra_payment.positive? ? @plan.extra_payment.to_i : nil),
+              min: 0, step: 1, placeholder: "0", autocomplete: "off",
+              class: "form-field__input w-28 text-sm",
+              data: { auto_submit_form_target: "auto" } %>
+      <% end %>
+    </div>
+
+    <div class="grid grid-cols-2 @3xl:grid-cols-4 gap-4">
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.total_debt") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums privacy-sensitive"><%= format_money(@plan.total_debt_money) %></p>
+      </div>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.payoff_date") %></p>
+        <p class="text-xl font-medium text-primary">
+          <%= @plan.capped? ? t(".stats.beyond_horizon") : l(@plan.payoff_date, format: :long) %>
+        </p>
+      </div>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.months_to_payoff") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums">
+          <%= @plan.capped? ? t(".stats.months_capped", count: @plan.months_to_payoff) : @plan.months_to_payoff %>
+        </p>
+      </div>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <p class="text-xs text-secondary mb-1"><%= t(".stats.interest_saved") %></p>
+        <p class="text-xl font-medium text-primary tabular-nums privacy-sensitive"><%= format_money(@plan.interest_saved_money) %></p>
+      </div>
+    </div>
+
+    <% if @plan.payable_debts.any? %>
+      <div class="bg-container rounded-xl border border-primary p-4">
+        <div class="h-[280px] privacy-sensitive"
+             data-controller="debt-payoff-chart"
+             data-debt-payoff-chart-data-value="<%= @plan.chart_payload.to_json %>"
+             data-debt-payoff-chart-aria-label-value="<%= t(".chart.aria_label") %>"></div>
+      </div>
+    <% end %>
+
+    <div class="bg-container rounded-xl border border-primary overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead>
+            <tr class="text-left text-xs text-secondary border-b border-divider">
+              <th class="px-4 py-3 font-medium"><%= t(".debt_list.name") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.balance") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.rate") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.minimum") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.payoff_date") %></th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @plan.debts.each do |debt| %>
+              <tr class="border-b border-divider last:border-0">
+                <td class="px-4 py-3 text-primary font-medium"><%= debt.name %></td>
+                <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(debt.balance, @plan.currency)) %></td>
+                <% if debt.needs_info? %>
+                  <td colspan="3" class="px-4 py-3">
+                    <%= form_with url: debt_payoff_plan_path, method: :get,
+                                  class: "flex items-center justify-end gap-2 flex-wrap",
+                                  data: { controller: "auto-submit-form", auto_submit_form_trigger_event_value: "blur" } do %>
+                      <%= hidden_field_tag :strategy, @plan.strategy %>
+                      <%= hidden_field_tag :extra_payment, (@plan.extra_payment.positive? ? @plan.extra_payment.to_i : nil) %>
+                      <%= render DS::Pill.new(label: t(".debt_list.needs_info"), size: :sm, tone: :warning, marker: false) %>
+                      <%= number_field_tag "overrides[#{debt.account_id}][rate]", debt.annual_rate_percent,
+                            min: 0, step: 0.01, placeholder: t(".debt_list.override_rate_label"), autocomplete: "off",
+                            aria: { label: t(".debt_list.override_rate_label") },
+                            class: "form-field__input w-24 text-sm",
+                            data: { auto_submit_form_target: "auto" } %>
+                      <%= number_field_tag "overrides[#{debt.account_id}][minimum_payment]", debt.minimum_payment,
+                            min: 0, step: 0.01, placeholder: t(".debt_list.override_minimum_label"), autocomplete: "off",
+                            aria: { label: t(".debt_list.override_minimum_label") },
+                            class: "form-field__input w-28 text-sm",
+                            data: { auto_submit_form_target: "auto" } %>
+                    <% end %>
+                  </td>
+                <% else %>
+                  <td class="px-4 py-3 text-right tabular-nums text-primary"><%= number_to_percentage(debt.annual_rate_percent, precision: 2) %></td>
+                  <td class="px-4 py-3 text-right tabular-nums text-primary privacy-sensitive"><%= format_money(Money.new(debt.minimum_payment, @plan.currency)) %></td>
+                  <td class="px-4 py-3 text-right text-primary">
+                    <% debt_result = @plan.debt_result_for(debt) %>
+                    <% if debt_result&.payoff_month %>
+                      <%= l(Date.current + debt_result.payoff_month.months, format: :long) %>
+                    <% else %>
+                      <span class="text-subdued"><%= t(".stats.beyond_horizon") %></span>
+                    <% end %>
+                  </td>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% else %>
+    <div class="flex flex-col items-center justify-center text-center gap-3 py-16">
+      <span class="w-12 h-12 rounded-full bg-surface-inset text-secondary flex items-center justify-center">
+        <%= icon("trending-down", size: "md") %>
+      </span>
+      <p class="text-sm text-secondary max-w-xs"><%= t(".empty_state.body") %></p>
+      <%= render DS::Link.new(
+        text: t(".empty_state.add_account"),
+        variant: "primary",
+        href: new_account_path(return_to: debt_payoff_plan_path),
+        icon: "plus"
+      ) %>
+    </div>
+  <% end %>
+</div>
