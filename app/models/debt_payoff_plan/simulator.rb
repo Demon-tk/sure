@@ -5,7 +5,9 @@
 # then the extra pool (the user's extra payment plus the freed minimums of
 # already-paid-off debts) is applied in strategy order. The order is
 # recomputed every month because the snowball ranking shifts as balances
-# shrink.
+# shrink. A debt with defer_months D (student-loan grace period) makes no
+# payments and takes no extra money during months 1..D — interest still
+# accrues — and behaves normally from month D+1 on.
 class DebtPayoffPlan::Simulator
   # A debt that never amortizes (payment below accrued interest) would loop
   # forever; 30 years is far beyond any plannable horizon.
@@ -46,12 +48,16 @@ class DebtPayoffPlan::Simulator
         interest_paid[d.account_id] += interest
       end
 
-      unpaid.each do |d|
+      # Deferred debts are absent from this month's payments entirely: no
+      # minimum, no extra money, no place in the payment ordering.
+      paying = unpaid.reject { |d| deferred?(d, month) }
+
+      paying.each do |d|
         balances[d.account_id] -= [ minimum_for(d), balances[d.account_id] ].min
       end
 
       pool = extra_payment + freed_minimums
-      ordered(unpaid, balances, month).each do |d|
+      ordered(paying, balances, month).each do |d|
         break if pool <= PENNY
         next if balances[d.account_id] <= PENNY
 
@@ -103,6 +109,13 @@ class DebtPayoffPlan::Simulator
 
     def minimum_for(debt)
       BigDecimal(debt.minimum_payment.to_s)
+    end
+
+    # True during months 1..defer_months: the debt still accrues interest but
+    # makes no payments and takes no extra money.
+    def deferred?(debt, month)
+      defer = debt.defer_months.to_i
+      defer.positive? && month <= defer
     end
 
     def ordered(unpaid, balances, month)

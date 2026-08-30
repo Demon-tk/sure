@@ -35,6 +35,36 @@ class DebtPayoffPlanTest < ActiveSupport::TestCase
     assert_equal BigDecimal(10), iou.annual_rate_percent
   end
 
+  test "defer override sets a debt's defer months" do
+    plan = build_plan(
+      overrides: { accounts(:loan).id => { defer: "12" } }
+    )
+
+    assert_equal 12, find_debt(plan, :loan).defer_months
+  end
+
+  test "defer override clamps negative values to 0" do
+    plan = build_plan(
+      overrides: { accounts(:loan).id => { defer: "-5" } }
+    )
+
+    assert_equal 0, find_debt(plan, :loan).defer_months
+  end
+
+  test "defer override clamps values above 120 to 120" do
+    plan = build_plan(
+      overrides: { accounts(:loan).id => { defer: "500" } }
+    )
+
+    assert_equal 120, find_debt(plan, :loan).defer_months
+  end
+
+  test "debts default to no deferment" do
+    plan = build_plan
+
+    assert_equal 0, find_debt(plan, :loan).defer_months
+  end
+
   test "an unknown strategy falls back to avalanche and a negative extra payment clamps to zero" do
     plan = build_plan(strategy: "yolo", extra_payment: "-50")
 

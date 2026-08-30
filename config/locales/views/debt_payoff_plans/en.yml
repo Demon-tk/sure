@@ -25,6 +25,7 @@ en:
         balance: Balance
         rate: Rate
         minimum: Minimum
+        defer: Defer (mo)
         payoff_date: Payoff date
         needs_info: Needs info
         rate_changes:
@@ -32,6 +33,7 @@ en:
           other: "%{count} scheduled rate changes"
         override_rate_label: Rate %
         override_minimum_label: Min. payment
+        override_defer_label: Defer (months)
         verdict: Vs. investing
       verdict:
         payoff: Pay off

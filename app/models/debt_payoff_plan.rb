@@ -11,8 +11,10 @@ class DebtPayoffPlan
 
   # rate_schedule holds scheduled APR changes as [[month_offset, rate]] from
   # the accountable's stored rate_changes (promo expirations, ARM resets).
-  # Empty = flat annual_rate_percent for the whole simulation.
-  DebtInput = Data.define(:account_id, :name, :accountable_type, :balance, :annual_rate_percent, :minimum_payment, :rate_schedule, :needs_info) do
+  # Empty = flat annual_rate_percent for the whole simulation. defer_months
+  # is the student-loan grace period: no payments for the first D months
+  # (0 = no deferment).
+  DebtInput = Data.define(:account_id, :name, :accountable_type, :balance, :annual_rate_percent, :minimum_payment, :rate_schedule, :needs_info, :defer_months) do
     def needs_info? = needs_info
   end
 
@@ -174,6 +176,7 @@ class DebtPayoffPlan
       override = overrides[row.account.id] || {}
       rate = override[:rate].presence || row.accountable.payoff_rate
       minimum = override[:minimum_payment].presence || row.accountable.payoff_minimum_payment
+      defer = override[:defer].presence.to_i.clamp(0, 120)
 
       DebtInput.new(
         account_id: row.account.id,
@@ -183,7 +186,8 @@ class DebtPayoffPlan
         annual_rate_percent: rate&.to_d,
         minimum_payment: minimum&.to_d,
         rate_schedule: row.accountable.payoff_rate_schedule,
-        needs_info: rate.blank? || minimum.blank?
+        needs_info: rate.blank? || minimum.blank?,
+        defer_months: defer
       )
     end
 

@@ -1,4 +1,4 @@
-<%# locals: (plan:, debt:, field:, value:, label:, step:) %>
+<%# locals: (plan:, debt:, field:, value:, label:, step:, min: 0, max: nil) %>
 <%# One inline GET form per editable cell. Submitting re-runs the plan with
     this value as an override; hidden fields carry the rest of the state so
     edits compose across fields and rows. %>
@@ -15,7 +15,7 @@
     <% end %>
   <% end %>
   <%= number_field_tag "overrides[#{debt.account_id}][#{field}]", value,
-        min: 0, step: step, placeholder: label, autocomplete: "off",
+        min: min, max: max, step: step, placeholder: label, autocomplete: "off",
         aria: { label: label },
         class: "form-field__input w-24 text-sm text-right tabular-nums",
         data: { auto_submit_form_target: "auto" } %>

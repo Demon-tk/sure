@@ -15,9 +15,10 @@ class DebtPayoffPlansController < ApplicationController
   end
 
   private
-    # overrides[<account_id>][rate|minimum_payment] query params for debts
-    # whose accountable can't supply a rate or minimum. Values stay in the
-    # URL — nothing is persisted.
+    # overrides[<account_id>][rate|minimum_payment|defer] query params for
+    # debts whose accountable can't supply a rate or minimum (or that defer
+    # payments for a grace period). Values stay in the URL — nothing is
+    # persisted.
     def parsed_overrides
       raw = params[:overrides]
       return {} unless raw.is_a?(ActionController::Parameters)
@@ -27,7 +28,8 @@ class DebtPayoffPlansController < ApplicationController
 
         overrides[account_id.to_s] = {
           rate: values[:rate].presence,
-          minimum_payment: values[:minimum_payment].presence
+          minimum_payment: values[:minimum_payment].presence,
+          defer: values[:defer].presence
         }.compact
       end
     end

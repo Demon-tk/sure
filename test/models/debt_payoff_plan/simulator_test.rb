@@ -119,12 +119,54 @@ class DebtPayoffPlan::SimulatorTest < ActiveSupport::TestCase
     assert_equal result.months_to_payoff + 1, balances.size
   end
 
+  test "a deferred debt accrues interest but makes no payment during its deferment" do
+    # 1000 at 12% APR (1%/mo), 100 minimum, 2-month deferment. Months 1-2
+    # grow the balance by 1% with no payment: 1010, then 1020.10.
+    result = simulate([ debt(id: "a", balance: 1000, rate: 12, minimum: 100, defer_months: 2) ])
+    balances = result.debt_results.first.balances
+
+    assert_equal BigDecimal("1000"), balances[0]
+    assert_equal BigDecimal("1010"), balances[1]
+    assert_equal BigDecimal("1020.10"), balances[2]
+  end
+
+  test "a deferred debt resumes minimum payments at month D+1" do
+    # 1000 at 12% APR, 100 minimum, 2-month deferment. Month 3: interest
+    # (1020.10 * 1% = 10.20) then the 100 minimum resumes: 930.30.
+    result = simulate([ debt(id: "a", balance: 1000, rate: 12, minimum: 100, defer_months: 2) ])
+    balances = result.debt_results.first.balances
+
+    assert_equal BigDecimal("1020.10"), balances[2]
+    assert_equal BigDecimal("930.30"), balances[3]
+  end
+
+  test "other debts still receive the extra payment while one debt is deferred" do
+    # "deferred" (12% APR, 2-month deferment) takes no money in months 1-2,
+    # so the 100 extra payment flows entirely to the 0% debt each month:
+    # 1000 - 50 min - 100 extra = 850, then 700.
+    result = simulate(
+      [
+        debt(id: "deferred", balance: 1000, rate: 12, minimum: 100, defer_months: 2),
+        debt(id: "other", balance: 1000, rate: 0, minimum: 50)
+      ],
+      extra_payment: 100
+    )
+
+    other = result.debt_results.find { |dr| dr.account_id == "other" }
+    deferred = result.debt_results.find { |dr| dr.account_id == "deferred" }
+
+    assert_equal BigDecimal("850"), other.balances[1]
+    assert_equal BigDecimal("700"), other.balances[2]
+    assert_equal BigDecimal("1010"), deferred.balances[1]
+    assert_equal BigDecimal("1020.10"), deferred.balances[2]
+  end
+
   private
     def simulate(debts, strategy: "avalanche", extra_payment: 0)
       DebtPayoffPlan::Simulator.new(debts, strategy: strategy, extra_payment: extra_payment).call
     end
 
-    def debt(id:, balance:, rate:, minimum:, rate_schedule: [])
+    def debt(id:, balance:, rate:, minimum:, rate_schedule: [], defer_months: 0)
       DebtPayoffPlan::DebtInput.new(
         account_id: id,
         name: id,
@@ -133,7 +175,8 @@ class DebtPayoffPlan::SimulatorTest < ActiveSupport::TestCase
         annual_rate_percent: BigDecimal(rate.to_s),
         minimum_payment: BigDecimal(minimum.to_s),
         rate_schedule: rate_schedule,
-        needs_info: false
+        needs_info: false,
+        defer_months: defer_months
       )
     end
 end

@@ -96,6 +96,7 @@
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.balance") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.rate") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.minimum") %></th>
+              <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.defer") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.payoff_date") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.verdict") %></th>
             </tr>
@@ -123,6 +124,10 @@
                 <td class="px-4 py-3 text-right">
                   <%= render "debt_payoff_plans/override_field", plan: @plan, debt: debt, field: :minimum_payment,
                              value: debt.minimum_payment&.round(2), label: t(".debt_list.override_minimum_label"), step: 0.01 %>
+                </td>
+                <td class="px-4 py-3 text-right">
+                  <%= render "debt_payoff_plans/override_field", plan: @plan, debt: debt, field: :defer,
+                             value: debt.defer_months, label: t(".debt_list.override_defer_label"), step: 1, min: 0, max: 120 %>
                 </td>
                 <td class="px-4 py-3 text-right text-primary">
                   <% debt_result = @plan.debt_result_for(debt) %>
