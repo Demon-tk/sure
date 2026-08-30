@@ -25,6 +25,7 @@ en:
         fire_age: FIRE age
         years_to_fire: Years to FIRE
         success_rate: Monte Carlo success rate
+        success_rate_value: "%{value}%"
         not_within_horizon: Not by 90
       chart:
         aria_label: Projected portfolio value by year against the FIRE number, with a Monte Carlo range

@@ -8,7 +8,7 @@ class PlanScenario < ApplicationRecord
   # navigated to later, so they must be relative planner URLs and nothing
   # else. A scheme ("https://...") or protocol-relative ("//...") value would
   # turn a saved bookmark into an open redirect to an arbitrary host.
-  PATH_FORMAT = %r{\A/(?:fire_plan|debt_payoff_plan)(?:/|\?|#|\z)}
+  PATH_FORMAT = %r{\A/(?:fire_plan|debt_payoff_plan)(?:[/?#]\S*)?\z}
 
   validates :name, presence: true, length: { maximum: 60 }, uniqueness: { scope: :family_id }
   validates :path, presence: true, length: { maximum: 2000 }, format: { with: PATH_FORMAT }

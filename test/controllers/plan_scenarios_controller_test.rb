@@ -49,6 +49,17 @@ class PlanScenariosControllerTest < ActionDispatch::IntegrationTest
     assert flash[:alert].present?
   end
 
+  test "create rejects a path containing a newline" do
+    enable_preview_features
+
+    assert_no_difference -> { @user.family.plan_scenarios.count } do
+      post plan_scenarios_url, params: { plan_scenario: valid_scenario_params.merge(path: "/fire_plan?a=1\n//evil") }
+    end
+
+    assert_redirected_to plan_path
+    assert flash[:alert].present?
+  end
+
   test "destroy removes a scenario owned by the family" do
     enable_preview_features
 

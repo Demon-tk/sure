@@ -82,7 +82,7 @@
       </div>
       <div class="bg-container rounded-xl border border-primary p-4">
         <p class="text-xs text-secondary mb-1"><%= t(".stats.success_rate") %></p>
-        <p class="text-xl font-medium text-primary tabular-nums"><%= "#{@plan.monte_carlo.success_rate}%" %></p>
+        <p class="text-xl font-medium text-primary tabular-nums"><%= t(".stats.success_rate_value", value: @plan.monte_carlo.success_rate) %></p>
       </div>
     </div>
 
