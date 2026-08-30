@@ -43,3 +43,27 @@ en:
       empty_state:
         body: Add an income source or an investment account to project your path to financial independence.
         add_account: Add account
+      milestones:
+        title: Milestones
+        subtitle: One-off or recurring life events that nudge your income, expenses, or portfolio over an age window.
+        empty: No milestones yet. Add one below to shape your projection.
+        age_range: Ages %{start_age}–%{end_age}
+        single_year: Age %{age} only
+        one_time: "%{amount} one-time"
+        annual: "%{amount}/year"
+        fire_age_delta: "FIRE age %{count} yr from milestones"
+        destroy: Remove
+        destroy_confirm: Remove this milestone? This can't be undone.
+        affects:
+          income: Income
+          expenses: Expenses
+          portfolio: Portfolio
+        form:
+          name: Name
+          affects: Affects
+          affects_prompt: Choose one
+          start_age: Start age
+          end_age: End age (optional)
+          one_time_amount: One-time amount
+          annual_amount: Annual amount
+          submit: Add milestone

@@ -114,7 +114,10 @@ class FirePlan::Projector
           # income-affecting event in retirement (Social Security, a pension,
           # a rental) therefore shows up as a *smaller withdrawal* rather than
           # as income: the portfolio only has to cover expenses net of it.
-          gross_income = BigDecimal(0)
+          # The row still reports that event income as gross income (it is the
+          # same amount already folded into the withdrawal below), so a
+          # retirement year with income events no longer reads as $0 earned.
+          gross_income = event_income
           net_need = [ expenses - event_income, BigDecimal(0) ].max
           # The retirement tax rate is a gross-up on the withdrawal: the
           # portfolio has to fund the spending *and* the tax on it.

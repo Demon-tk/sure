@@ -227,7 +227,9 @@ class FirePlan::ProjectorTest < ActiveSupport::TestCase
 
     retirement_rows.each do |row|
       assert row.fired?
-      assert_equal BigDecimal(0), row.gross_income
+      # The retired row reports the event income (20,000) as gross income even
+      # though the withdrawal math nets it off spending.
+      assert_equal BigDecimal(20_000), row.gross_income
       assert_equal BigDecimal(50_000), row.expenses
       # 50,000 of spending less 20,000 of Social-Security-style income.
       assert_equal BigDecimal(-30_000), row.savings

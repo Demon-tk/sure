@@ -64,6 +64,8 @@ export default class extends Controller {
 
     const data = this.dataValue || {};
     const rows = data.rows || [];
+    // Optional "without your milestones" series, [{year, value}] or null.
+    const baseline = data.baseline || [];
     if (rows.length === 0) return;
 
     const width = root.clientWidth || 720;
@@ -83,7 +85,7 @@ export default class extends Controller {
     const bandRows = rows.filter((r) => r.p10 != null && r.p90 != null);
     // The band's upper edge usually overshoots the deterministic line, so the
     // domain has to clear whichever is taller.
-    const maxValue = d3.max(rows, (r) => Math.max(r.value, r.p90 ?? 0));
+    const maxValue = d3.max(rows.concat(baseline), (r) => Math.max(r.value, r.p90 ?? 0));
 
     const x = d3
       .scaleLinear()
@@ -140,6 +142,23 @@ export default class extends Controller {
         .call((axis) =>
           axis.selectAll("text").attr("fill", textSecondary).attr("font-size", "0.7rem"),
         );
+    }
+
+    // "Without your milestones" baseline, under the main series.
+    if (baseline.length > 1) {
+      const baselineLine = d3
+        .line()
+        .x((r) => x(r.year))
+        .y((r) => y(r.value))
+        .curve(d3.curveMonotoneX);
+
+      g.append("path")
+        .datum(baseline)
+        .attr("fill", "none")
+        .attr("stroke", textSecondary)
+        .attr("stroke-width", 1.5)
+        .attr("stroke-dasharray", "4 4")
+        .attr("d", baselineLine);
     }
 
     // Monte Carlo p10–p90 band, under the deterministic line.
