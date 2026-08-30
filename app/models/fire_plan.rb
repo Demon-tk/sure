@@ -57,23 +57,35 @@ class FirePlan
     gross_income.positive? || portfolio.positive?
   end
 
+  # The life events the family has planned. Inactive milestones are simply
+  # not part of the plan.
+  def milestones
+    @milestones ||= family.fire_milestones.active.to_a
+  end
+
   def projection
-    @projection ||= FirePlan::Projector.new(
-      tax_estimator: tax_estimator,
-      current_age: assumption(:current_age).to_i,
-      portfolio: portfolio,
-      gross_income: gross_income,
-      annual_expenses: annual_expenses,
-      income_growth: assumption(:income_growth),
-      inflation: assumption(:inflation),
-      expected_return: assumption(:expected_return),
-      swr: assumption(:swr),
-      retirement_tax_rate: assumption(:retirement_tax_rate)
-    ).project
+    @projection ||= build_projection(milestone_events)
+  end
+
+  # The same plan with every life event removed, so the UI can show what the
+  # milestones actually cost (or bought) the family.
+  def baseline_projection
+    @baseline_projection ||= build_projection([])
+  end
+
+  # Positive means the milestones push FIRE later, negative means earlier.
+  # Nil whenever either side never fires inside the horizon, since there is
+  # nothing meaningful to subtract.
+  def fire_age_delta
+    return nil unless baseline_projection.fire_age && projection.fire_age
+
+    projection.fire_age - baseline_projection.fire_age
   end
 
   # Stress-tests the deterministic plan's own cashflow schedule: same
-  # contributions and withdrawals, randomized returns.
+  # contributions and withdrawals, randomized returns. This deliberately
+  # uses the with-events projection — the point is to stress-test the real
+  # plan, milestones included, not a baseline the family isn't living.
   def monte_carlo
     @monte_carlo ||= FirePlan::MonteCarlo.new(trials: 1000).simulate(
       portfolio: portfolio.to_f,
@@ -101,7 +113,11 @@ class FirePlan
       fire_number: fire_number.to_f,
       fire_number_label: format_chart_money(fire_number),
       fire_age: fire_age,
+      fire_age_delta: fire_age_delta,
       success_rate: monte_carlo.success_rate,
+      # Only sent when there is something to compare against, so the chart
+      # knows whether to draw the dashed "without your milestones" line.
+      baseline: milestones.any? ? baseline_series : nil,
       rows: projection.rows.map.with_index do |row, i|
         band = monte_carlo.percentiles[i]
         {
@@ -118,6 +134,40 @@ class FirePlan
   end
 
   private
+    def build_projection(events)
+      FirePlan::Projector.new(
+        tax_estimator: tax_estimator,
+        current_age: assumption(:current_age).to_i,
+        portfolio: portfolio,
+        gross_income: gross_income,
+        annual_expenses: annual_expenses,
+        income_growth: assumption(:income_growth),
+        inflation: assumption(:inflation),
+        expected_return: assumption(:expected_return),
+        swr: assumption(:swr),
+        retirement_tax_rate: assumption(:retirement_tax_rate),
+        events: events
+      ).project
+    end
+
+    # The projector is pure math and knows nothing about FireMilestone, so
+    # the mapping lives here.
+    def milestone_events
+      milestones.map do |milestone|
+        {
+          start_age: milestone.start_age,
+          end_age: milestone.end_age,
+          one_time: milestone.one_time_amount,
+          annual: milestone.annual_amount,
+          affects: milestone.affects
+        }
+      end
+    end
+
+    def baseline_series
+      baseline_projection.rows.map { |row| { year: row.year, value: row.portfolio.to_f } }
+    end
+
     def tax_estimator
       FirePlan::TaxEstimator.new(filing_status: filing_status, state_rate: assumption(:state_rate))
     end

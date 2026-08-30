@@ -1,0 +1,14 @@
+kids:
+  family: dylan_family
+  name: Kids
+  start_age: 32
+  end_age: 50
+  annual_amount: 12000
+  affects: expenses
+
+windfall:
+  family: dylan_family
+  name: Inheritance
+  start_age: 40
+  one_time_amount: 50000
+  affects: portfolio

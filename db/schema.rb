@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_30_161000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -836,6 +836,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_161000) do
     t.index ["family_id", "merchant_id"], name: "idx_on_family_id_merchant_id_23e883e08f", unique: true
     t.index ["family_id"], name: "index_family_merchant_associations_on_family_id"
     t.index ["merchant_id"], name: "index_family_merchant_associations_on_merchant_id"
+  end
+
+  create_table "fire_milestones", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
+    t.boolean "active", default: true, null: false
+    t.string "affects", default: "expenses", null: false
+    t.decimal "annual_amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.datetime "created_at", null: false
+    t.integer "end_age"
+    t.uuid "family_id", null: false
+    t.string "name", null: false
+    t.decimal "one_time_amount", precision: 19, scale: 4, default: "0.0", null: false
+    t.integer "start_age", null: false
+    t.datetime "updated_at", null: false
+    t.index ["family_id"], name: "index_fire_milestones_on_family_id"
+    t.check_constraint "affects::text = ANY (ARRAY['income'::character varying::text, 'expenses'::character varying::text, 'portfolio'::character varying::text])", name: "chk_fire_milestones_affects"
   end
 
   create_table "goal_accounts", id: :uuid, default: -> { "gen_random_uuid()" }, force: :cascade do |t|
@@ -2478,6 +2493,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_30_161000) do
   add_foreign_key "family_exports", "families"
   add_foreign_key "family_merchant_associations", "families"
   add_foreign_key "family_merchant_associations", "merchants"
+  add_foreign_key "fire_milestones", "families"
   add_foreign_key "goal_accounts", "accounts", on_delete: :restrict
   add_foreign_key "goal_accounts", "goals", on_delete: :cascade
   add_foreign_key "goal_pledges", "accounts", on_delete: :restrict
