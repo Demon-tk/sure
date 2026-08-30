@@ -1,0 +1,13 @@
+# Local test override: build from this checkout instead of pulling :stable,
+# bind to localhost only. Usage:
+#   docker compose -f compose.example.yml -f compose.local.yml up -d --build
+services:
+  web:
+    image: sure-local:latest
+    build: .
+    ports: !override
+      - "127.0.0.1:3000:3000"
+      - "192.168.0.145:3000:3000"
+  worker:
+    image: sure-local:latest
+    build: .
