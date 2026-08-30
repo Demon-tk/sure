@@ -1,0 +1,53 @@
+<%# locals: (form:) %>
+<%# Scheduled APR changes editor for a RateChangeable accountable (loans,
+    credit cards). `form` is the accountable fields_for builder. Rows submit
+    as rate_changes[][effective_on] / [rate]; blank rows are dropped by the
+    model setter. %>
+<% field_prefix = "#{form.object_name}[rate_changes][]" %>
+
+<div data-controller="rate-changes" class="space-y-2">
+  <div class="flex items-center justify-between">
+    <p class="text-sm text-secondary"><%= t("shared.rate_changes_fields.title") %></p>
+    <button type="button"
+            class="text-sm text-secondary hover:text-primary inline-flex items-center gap-1 focus-ring rounded-md px-1"
+            data-action="rate-changes#add">
+      <%= icon("plus", size: "sm") %>
+      <%= t("shared.rate_changes_fields.add") %>
+    </button>
+  </div>
+
+  <div data-rate-changes-target="list" class="space-y-2">
+    <% Array(form.object.rate_changes).each do |entry| %>
+      <div data-rate-changes-row class="flex items-center gap-2">
+        <input type="date" name="<%= field_prefix %>[effective_on]" value="<%= entry["effective_on"] %>" autocomplete="off"
+               class="form-field__input text-sm" aria-label="<%= t("shared.rate_changes_fields.effective_on") %>">
+        <input type="number" name="<%= field_prefix %>[rate]" value="<%= entry["rate"] %>" min="0" step="0.001"
+               placeholder="<%= t("shared.rate_changes_fields.rate_placeholder") %>" autocomplete="off"
+               class="form-field__input w-28 text-sm" aria-label="<%= t("shared.rate_changes_fields.rate") %>">
+        <button type="button" class="text-subdued hover:text-primary p-1 rounded-md focus-ring"
+                aria-label="<%= t("shared.rate_changes_fields.remove") %>"
+                data-action="rate-changes#remove">
+          <%= icon("x", size: "sm") %>
+        </button>
+      </div>
+    <% end %>
+    <%# An empty schedule still submits the key so clearing the last row
+        persists: the model setter turns this blank entry into []. %>
+    <input type="hidden" name="<%= field_prefix %>[effective_on]" value="">
+  </div>
+
+  <template data-rate-changes-target="template">
+    <div data-rate-changes-row class="flex items-center gap-2">
+      <input type="date" name="<%= field_prefix %>[effective_on]" autocomplete="off"
+             class="form-field__input text-sm" aria-label="<%= t("shared.rate_changes_fields.effective_on") %>">
+      <input type="number" name="<%= field_prefix %>[rate]" min="0" step="0.001"
+             placeholder="<%= t("shared.rate_changes_fields.rate_placeholder") %>" autocomplete="off"
+             class="form-field__input w-28 text-sm" aria-label="<%= t("shared.rate_changes_fields.rate") %>">
+      <button type="button" class="text-subdued hover:text-primary p-1 rounded-md focus-ring"
+              aria-label="<%= t("shared.rate_changes_fields.remove") %>"
+              data-action="rate-changes#remove">
+        <%= icon("x", size: "sm") %>
+      </button>
+    </div>
+  </template>
+</div>

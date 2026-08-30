@@ -1,5 +1,6 @@
 class Loan < ApplicationRecord
   include Accountable
+  include RateChangeable
 
   SUBTYPES = {
     "mortgage" => { short: "Mortgage", long: "Mortgage" },
@@ -33,14 +34,21 @@ class Loan < ApplicationRecord
     Money.new(account.first_valuation_amount, account.currency)
   end
 
-  # Variable-rate loans have no dependable rate or amortized payment, so they
-  # report nil and DebtPayoffPlan asks the user instead.
-  def payoff_rate
-    interest_rate if rate_type == "fixed"
+  def minimum_payment_money
+    minimum_payment ? Money.new(minimum_payment, account.currency) : nil
   end
 
+  # Variable-rate loans have no dependable rate, so they report nil and
+  # DebtPayoffPlan asks the user — unless a rate-change schedule is stored,
+  # in which case the current interest_rate plus the schedule is the model.
+  def payoff_rate
+    interest_rate if rate_type == "fixed" || rate_changes.present?
+  end
+
+  # The servicer's actual minimum wins when stored; the amortized payment is
+  # only an estimate (income-driven plans and escrow make them differ).
   def payoff_minimum_payment
-    monthly_payment&.amount
+    minimum_payment.presence || monthly_payment&.amount
   end
 
   class << self

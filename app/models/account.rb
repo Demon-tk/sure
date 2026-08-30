@@ -187,6 +187,16 @@ class Account < ApplicationRecord
         )
         raise result.error if result.error
 
+        # When the opening balance differs from the entered current balance
+        # (a loan created with its original principal), the opening anchor is
+        # the account's only entry — the initial sync would recalculate
+        # today's balance back to it, silently discarding what the user just
+        # typed. Anchor today's balance too so both survive.
+        if initial_balance.present? && initial_balance != account.balance
+          current_result = Account::CurrentBalanceManager.new(account).set_current_balance(account.balance)
+          raise current_result.error if current_result.error
+        end
+
         account.auto_share_with_family! if account.family.share_all_by_default?
       end
 

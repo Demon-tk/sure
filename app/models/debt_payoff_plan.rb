@@ -9,10 +9,10 @@ class DebtPayoffPlan
 
   STRATEGIES = %w[avalanche snowball].freeze
 
-  # future_rate/rate_change_month model a promo APR: the debt accrues at
-  # annual_rate_percent for rate_change_month months, then at future_rate
-  # (a 0% intro card that jumps to 24% after month 12). Both nil = flat rate.
-  DebtInput = Data.define(:account_id, :name, :accountable_type, :balance, :annual_rate_percent, :minimum_payment, :future_rate, :rate_change_month, :needs_info) do
+  # rate_schedule holds scheduled APR changes as [[month_offset, rate]] from
+  # the accountable's stored rate_changes (promo expirations, ARM resets).
+  # Empty = flat annual_rate_percent for the whole simulation.
+  DebtInput = Data.define(:account_id, :name, :accountable_type, :balance, :annual_rate_percent, :minimum_payment, :rate_schedule, :needs_info) do
     def needs_info? = needs_info
   end
 
@@ -137,9 +137,6 @@ class DebtPayoffPlan
       rate = override[:rate].presence || row.accountable.payoff_rate
       minimum = override[:minimum_payment].presence || row.accountable.payoff_minimum_payment
 
-      future_rate = override[:future_rate].presence
-      rate_change_month = override[:rate_change_month].presence
-
       DebtInput.new(
         account_id: row.account.id,
         name: row.name,
@@ -147,8 +144,7 @@ class DebtPayoffPlan
         balance: row.converted_balance,
         annual_rate_percent: rate&.to_d,
         minimum_payment: minimum&.to_d,
-        future_rate: future_rate&.to_d,
-        rate_change_month: rate_change_month&.to_i,
+        rate_schedule: row.accountable.payoff_rate_schedule,
         needs_info: rate.blank? || minimum.blank?
       )
     end

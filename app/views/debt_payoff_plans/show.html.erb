@@ -90,7 +90,6 @@
               <th class="px-4 py-3 font-medium"><%= t(".debt_list.name") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.balance") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.rate") %></th>
-              <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.rate_change") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.minimum") %></th>
               <th class="px-4 py-3 font-medium text-right"><%= t(".debt_list.payoff_date") %></th>
             </tr>
@@ -110,15 +109,9 @@
                 <td class="px-4 py-3 text-right">
                   <%= render "debt_payoff_plans/override_field", plan: @plan, debt: debt, field: :rate,
                              value: debt.annual_rate_percent, label: t(".debt_list.override_rate_label"), step: 0.01 %>
-                </td>
-                <td class="px-4 py-3 text-right">
-                  <span class="inline-flex items-center gap-1 justify-end">
-                    <%= render "debt_payoff_plans/override_field", plan: @plan, debt: debt, field: :future_rate,
-                               value: debt.future_rate, label: t(".debt_list.future_rate_label"), step: 0.01 %>
-                    <span class="text-xs text-subdued"><%= t(".debt_list.after_month") %></span>
-                    <%= render "debt_payoff_plans/override_field", plan: @plan, debt: debt, field: :rate_change_month,
-                               value: debt.rate_change_month, label: t(".debt_list.rate_change_month_label"), step: 1 %>
-                  </span>
+                  <% if debt.rate_schedule.any? %>
+                    <p class="text-xs text-subdued mt-1"><%= t(".debt_list.rate_changes", count: debt.rate_schedule.size) %></p>
+                  <% end %>
                 </td>
                 <td class="px-4 py-3 text-right">
                   <%= render "debt_payoff_plans/override_field", plan: @plan, debt: debt, field: :minimum_payment,

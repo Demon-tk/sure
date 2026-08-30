@@ -29,6 +29,14 @@
                                  placeholder: t("loans.form.term_months_placeholder") %>
       </div>
 
+      <div class="flex items-center gap-2">
+        <%= loan_form.money_field :minimum_payment,
+                                 label: t("loans.form.minimum_payment"),
+                                 default_currency: Current.family.currency %>
+      </div>
+
+      <%= render "shared/rate_changes_fields", form: loan_form %>
+
       <div>
         <%= loan_form.select :subtype,
                   Loan.subtype_options_for_select,

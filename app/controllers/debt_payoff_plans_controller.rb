@@ -26,9 +26,7 @@ class DebtPayoffPlansController < ApplicationController
 
         overrides[account_id.to_s] = {
           rate: values[:rate].presence,
-          minimum_payment: values[:minimum_payment].presence,
-          future_rate: values[:future_rate].presence,
-          rate_change_month: values[:rate_change_month].presence
+          minimum_payment: values[:minimum_payment].presence
         }.compact
       end
     end

@@ -6,6 +6,13 @@ en:
   shared:
     preview: Preview
     dot_separator: "·"
+    rate_changes_fields:
+      title: Scheduled rate changes
+      add: Add rate change
+      effective_on: Effective date
+      rate: New rate (%)
+      rate_placeholder: New rate %
+      remove: Remove rate change
     sync_toast:
       message: "New data available"
       refresh: "Refresh"

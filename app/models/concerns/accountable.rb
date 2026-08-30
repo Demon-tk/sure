@@ -143,4 +143,10 @@ module Accountable
   def payoff_minimum_payment
     nil
   end
+
+  # Scheduled APR changes as [[month_offset, rate]]; liability types that
+  # store a schedule (RateChangeable) override this.
+  def payoff_rate_schedule(from: Date.current)
+    []
+  end
 end

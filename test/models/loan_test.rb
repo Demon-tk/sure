@@ -31,6 +31,36 @@ class LoanTest < ActiveSupport::TestCase
     assert_equal loan.monthly_payment.amount, loan.payoff_minimum_payment
   end
 
+  test "a stored minimum payment beats the amortized estimate" do
+    loan = accounts(:loan).loan
+    loan.update!(minimum_payment: 150)
+
+    assert_equal 150, loan.payoff_minimum_payment
+  end
+
+  test "rate changes normalize, sort, and convert to month offsets" do
+    loan = accounts(:loan).loan
+    loan.update!(rate_changes: [
+      { effective_on: 6.months.from_now.to_date.to_s, rate: "9.5" },
+      { effective_on: 2.months.from_now.to_date.to_s, rate: "7" },
+      { effective_on: "", rate: "3" }
+    ])
+
+    assert_equal 2, loan.rate_changes.size
+    assert_equal [ "7.0", "9.5" ], loan.rate_changes.map { |e| e["rate"] }
+
+    schedule = loan.payoff_rate_schedule
+    assert_equal [ 2, 6 ], schedule.map(&:first)
+    assert_equal BigDecimal("7"), schedule.first.last
+  end
+
+  test "a variable rate loan with a rate schedule still reports its payoff rate" do
+    loan = accounts(:loan).loan
+    loan.update!(rate_type: "variable", rate_changes: [ { effective_on: 1.year.from_now.to_date.to_s, rate: "8" } ])
+
+    assert_equal loan.interest_rate, loan.payoff_rate
+  end
+
   test "a variable rate loan reports no payoff rate" do
     loan = accounts(:loan).loan
     loan.update!(rate_type: "variable")

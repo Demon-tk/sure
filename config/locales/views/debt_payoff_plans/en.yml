@@ -26,12 +26,11 @@ en:
         minimum: Minimum
         payoff_date: Payoff date
         needs_info: Needs info
-        rate_change: Rate change
-        after_month: after mo.
+        rate_changes:
+          one: 1 scheduled rate change
+          other: "%{count} scheduled rate changes"
         override_rate_label: Rate %
         override_minimum_label: Min. payment
-        future_rate_label: New rate %
-        rate_change_month_label: Month
       chart:
         aria_label: Projected balance of each debt by month until payoff
       empty_state:

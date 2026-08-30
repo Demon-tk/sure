@@ -7,7 +7,8 @@ class CreditCardsController < ApplicationController
     :minimum_payment,
     :apr,
     :annual_fee,
-    :expiration_date
+    :expiration_date,
+    rate_changes: [ :effective_on, :rate ]
   )
 
   def update

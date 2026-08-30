@@ -1,5 +1,6 @@
 class CreditCard < ApplicationRecord
   include Accountable
+  include RateChangeable
 
   DEFAULT_SUBTYPE = "credit_card"
 

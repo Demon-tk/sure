@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_08_30_161000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "pgcrypto"
@@ -521,6 +521,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
     t.date "expiration_date"
     t.jsonb "locked_attributes", default: {}
     t.decimal "minimum_payment", precision: 10, scale: 2
+    t.jsonb "rate_changes", default: [], null: false
     t.string "subtype"
     t.datetime "updated_at", null: false
   end
@@ -1308,6 +1309,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_08_26_090000) do
     t.decimal "initial_balance", precision: 19, scale: 4
     t.decimal "interest_rate", precision: 10, scale: 3
     t.jsonb "locked_attributes", default: {}
+    t.decimal "minimum_payment", precision: 10, scale: 2
+    t.jsonb "rate_changes", default: [], null: false
     t.string "rate_type"
     t.string "subtype"
     t.integer "term_months"

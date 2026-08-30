@@ -89,13 +89,13 @@ class DebtPayoffPlan::Simulator
   private
     attr_reader :debts, :strategy, :extra_payment
 
-    # A promo APR runs for rate_change_month months, then future_rate takes
-    # over (0% intro card jumping to its standard rate).
+    # Walks the debt's rate schedule: the base rate applies until the first
+    # change's month, each change applies from its month onward (a 0% intro
+    # card jumping to its standard rate, an ARM resetting more than once).
     def monthly_rate(debt, month)
-      rate = if debt.future_rate && debt.rate_change_month && month > debt.rate_change_month
-        debt.future_rate
-      else
-        debt.annual_rate_percent
+      rate = debt.annual_rate_percent
+      debt.rate_schedule.each do |change_month, change_rate|
+        rate = change_rate if month >= change_month
       end
 
       BigDecimal(rate.to_s) / 1200

@@ -33,6 +33,8 @@
                                         placeholder: t("credit_cards.form.annual_fee_placeholder"),
                                         min: 0 %>
       </div>
+
+      <%= render "shared/rate_changes_fields", form: credit_card_form %>
     <% end %>
 
     <% enable_banking_account = account.provider_account_for("EnableBankingAccount") if account.persisted? %>
